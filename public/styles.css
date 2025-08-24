@@ -13,6 +13,16 @@
   --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 32px 64px -12px rgba(0, 0, 0, 0.4);
   --glow: 0 0 20px rgba(34, 211, 238, 0.3);
+  
+  /* Gradientes reutilizáveis */
+  --input-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%);
+  --brand-gradient: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+  --topbar-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  
+  /* Novas variáveis */
+  --wheel-shadow: 0 0 50px rgba(0, 0, 0, 0.6);
+  --wheel-3d: 0 20px 40px rgba(0, 0, 0, 0.8);
+  --result-glow: 0 0 40px rgba(34, 197, 94, 0.6);
 }
 
 * {
@@ -53,7 +63,7 @@ body::before {
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  background: var(--topbar-bg);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   box-shadow: var(--shadow);
@@ -65,7 +75,7 @@ body::before {
 .brand {
   font-weight: 900;
   font-size: 1.5rem;
-  background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+  background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -86,13 +96,21 @@ body::before {
 .balance {
   padding: 8px 16px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%);
+  background: var(--input-bg);
   border: 1px solid rgba(148, 163, 184, 0.2);
   font-weight: 700;
   font-size: 1.1rem;
   color: #22c55e;
   text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
   backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balance i {
+  color: #fbbf24;
+  font-size: 1rem;
 }
 
 .avatar {
@@ -105,12 +123,61 @@ body::before {
   border: 2px solid rgba(148, 163, 184, 0.3);
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .avatar:hover {
   transform: scale(1.1);
   border-color: #22d3ee;
   box-shadow: var(--glow);
+}
+
+.avatar i {
+  font-size: 1.2rem;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--card);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 8px 0;
+  min-width: 200px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.profile-dropdown.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  margin: 0 8px;
+}
+
+.dropdown-item:hover {
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.dropdown-item i {
+  width: 16px;
+  color: var(--text-secondary);
 }
 
 /* Container e Game Card */
@@ -129,6 +196,7 @@ body::before {
   position: relative;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .game-card::before {
@@ -151,21 +219,29 @@ body::before {
   font-size: 2.5rem;
   font-weight: 900;
   margin-bottom: 32px;
-  background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+  background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
 }
 
-/* Wheel */
+/* Wheel Container */
+.wheel-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 32px 0;
+}
+
 .wheel-wrap {
   position: relative;
   display: grid;
   place-items: center;
-  margin: 32px auto;
   width: 360px;
   height: 360px;
+  perspective: 1000px;
 }
 
 .pointer {
@@ -182,7 +258,13 @@ svg {
   width: 360px;
   height: 360px;
   transform: rotate(-22.5deg);
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4));
+  filter: var(--wheel-shadow);
+  transition: all 0.3s ease;
+}
+
+svg:hover {
+  filter: var(--wheel-3d);
+  transform: rotate(-22.5deg) scale(1.02);
 }
 
 .hub {
@@ -199,6 +281,100 @@ svg {
   text-anchor: middle;
   dominant-baseline: middle;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Slices da roleta com efeito 3D */
+svg path {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+svg path:hover {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  transform: scale(1.02);
+}
+
+.win-slice, .lose-slice {
+  transition: all 0.3s ease;
+}
+
+/* Result Display */
+.result-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  z-index: 100;
+  animation: resultPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.result-display.show {
+  display: block;
+}
+
+.result-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.result-icon {
+  font-size: 4rem;
+  animation: bounce 1s infinite;
+}
+
+.result-text {
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.result-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+/* Quick Bets */
+.quick-bets {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+
+.quick-bet-btn {
+  padding: 8px 16px;
+  border: 2px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: var(--text);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.quick-bet-btn:hover {
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+}
+
+.quick-bet-btn.active {
+  background: #22d3ee;
+  color: #000;
+  border-color: #22d3ee;
 }
 
 /* Controles */
@@ -220,7 +396,7 @@ svg {
 }
 
 .bet input {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%);
+  background: var(--input-bg);
   border: 2px solid rgba(148, 163, 184, 0.2);
   color: var(--text);
   padding: 12px 16px;
@@ -232,6 +408,10 @@ svg {
   backdrop-filter: blur(10px);
 }
 
+.bet input:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
 .bet input:focus {
   outline: none;
   border-color: #22d3ee;
@@ -239,8 +419,50 @@ svg {
   transform: translateY(-2px);
 }
 
-.bet input:hover {
-  border-color: rgba(148, 163, 184, 0.4);
+/* Botão Play melhorado */
+.btn-play {
+  padding: 16px 32px;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 8px 25px rgba(34, 211, 238, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 160px;
+}
+
+.btn-play::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.btn-play:hover::before {
+  left: 100%;
+}
+
+.btn-play:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 35px rgba(34, 211, 238, 0.6);
+}
+
+.btn-play:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.btn-play i {
+  margin-right: 8px;
+  font-size: 1.1rem;
 }
 
 /* Botões */
@@ -256,6 +478,9 @@ svg {
   overflow: hidden;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn::before {
@@ -273,6 +498,11 @@ svg {
   left: 100%;
 }
 
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.3);
+}
+
 .btn-primary {
   background: var(--accent);
   color: #000;
@@ -283,6 +513,10 @@ svg {
 .btn-primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 35px rgba(34, 211, 238, 0.4);
+}
+
+.btn-primary:active {
+  animation: pulse 0.2s ease-in-out;
 }
 
 .btn-ghost {
@@ -297,6 +531,22 @@ svg {
   transform: translateY(-2px);
 }
 
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn:disabled:hover {
+  transform: none !important;
+  box-shadow: 0 8px 25px rgba(34, 211, 238, 0.3) !important;
+}
+
 /* Resultado */
 .result {
   text-align: center;
@@ -309,6 +559,12 @@ svg {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(51, 65, 85, 0.5) 100%);
   border: 1px solid rgba(148, 163, 184, 0.1);
   backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.result:empty::before {
+  content: "—";
+  opacity: 0.5;
 }
 
 .hint {
@@ -321,6 +577,113 @@ svg {
 .hint strong {
   color: #f59e0b;
   font-weight: 700;
+}
+
+/* Histórico de Apostas */
+.history-card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px;
+  margin-top: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: var(--shadow);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.history-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.history-header i {
+  color: #22d3ee;
+}
+
+.bet-history {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.history-placeholder i {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.history-placeholder p {
+  font-size: 1.1rem;
+}
+
+.bet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  transition: all 0.3s ease;
+}
+
+.bet-item:hover {
+  background: rgba(30, 41, 59, 0.8);
+  transform: translateX(4px);
+}
+
+.bet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bet-amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.bet-time {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.bet-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.bet-result.win {
+  color: #22c55e;
+}
+
+.bet-result.lose {
+  color: #ef4444;
+}
+
+.bet-balance {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 /* Modal */
@@ -347,41 +710,73 @@ svg {
 }
 
 .modal-box {
-  width: 450px;
+  width: 500px;
   background: var(--card);
   border-radius: 24px;
-  padding: 32px;
+  padding: 0;
   color: var(--text);
   border: 1px solid rgba(148, 163, 184, 0.2);
   box-shadow: var(--shadow-lg);
   transform: scale(0.9);
   transition: transform 0.3s ease;
+  overflow: hidden;
 }
 
 .modal.show .modal-box {
   transform: scale(1);
 }
 
-.modal-box h2 {
-  margin-bottom: 24px;
-  font-size: 1.8rem;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+  background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.modal-box label {
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text);
+}
+
+.modal-body {
+  padding: 32px;
+}
+
+.modal-body label {
   display: block;
   margin-bottom: 16px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.modal-box input {
+.modal-body input {
   width: 100%;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%);
+  background: var(--input-bg);
   border: 2px solid rgba(148, 163, 184, 0.2);
   color: var(--text);
   padding: 16px;
@@ -392,88 +787,66 @@ svg {
   backdrop-filter: blur(10px);
 }
 
-.modal-box input:focus {
+.modal-body input:focus {
   outline: none;
   border-color: #22d3ee;
   box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Quick Deposit */
+.quick-deposit {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.quick-deposit-btn {
+  padding: 12px;
+  border: 2px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: var(--text);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.quick-deposit-btn:hover {
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.1);
+  transform: translateY(-2px);
+}
+
+.withdraw-info {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(30, 41, 59, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.withdraw-info p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.withdraw-info strong {
+  color: #22c55e;
 }
 
 .modal-actions {
   display: flex;
   gap: 16px;
   justify-content: flex-end;
-  margin-top: 32px;
+  padding: 24px 32px;
+  background: rgba(30, 41, 59, 0.3);
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-/* Animações */
-.spin {
-  transition: transform 2.5s cubic-bezier(0.17, 0.67, 0.32, 1.35);
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.btn-primary:active {
-  animation: pulse 0.2s ease-in-out;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 16px;
-    margin: 20px auto;
-  }
-  
-  .game-card {
-    padding: 24px;
-    border-radius: 20px;
-  }
-  
-  .wheel-wrap {
-    width: 280px;
-    height: 280px;
-  }
-  
-  svg {
-    width: 280px;
-    height: 280px;
-  }
-  
-  .controls {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .modal-box {
-    width: 90%;
-    max-width: 400px;
-    padding: 24px;
-  }
-  
-  .topbar {
-    padding: 12px 16px;
-  }
-  
-  .brand {
-    font-size: 1.2rem;
-  }
-  
-  .actions {
-    gap: 12px;
-  }
-}
-
-/* Efeitos de hover para slices */
-svg path {
-  transition: all 0.3s ease;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-svg path:hover {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-  transform: scale(1.02);
+.modal-actions .btn:hover {
+  transform: translateY(-2px);
 }
 
 /* Sistema de Notificações */
@@ -531,61 +904,16 @@ svg path:hover {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%);
 }
 
-/* Melhorias na roleta */
-.win-slice {
-  transition: all 0.3s ease;
+/* Animações */
+.spin {
+  transition: transform 2.5s cubic-bezier(0.17, 0.67, 0.32, 1.35);
 }
 
-.lose-slice {
-  transition: all 0.3s ease;
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-/* Efeitos de foco melhorados */
-.btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.3);
-}
-
-.bet input:focus {
-  outline: none;
-  border-color: #22d3ee;
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-  transform: translateY(-2px);
-}
-
-/* Loading state para o botão play */
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.btn:disabled:hover {
-  transform: none !important;
-  box-shadow: 0 8px 25px rgba(34, 211, 238, 0.3) !important;
-}
-
-/* Melhorias no resultado */
-.result {
-  text-align: center;
-  min-height: 32px;
-  margin: 24px 0 16px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  padding: 16px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(51, 65, 85, 0.5) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.result:empty::before {
-  content: "—";
-  opacity: 0.5;
-}
-
-/* Animações de entrada para elementos */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -597,24 +925,89 @@ svg path:hover {
   }
 }
 
-.game-card {
-  animation: fadeInUp 0.6s ease-out;
+@keyframes resultPop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
-/* Melhorias no modal */
-.modal-box input:focus {
-  outline: none;
-  border-color: #22d3ee;
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-  transform: translateY(-2px);
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
 }
 
-/* Efeitos de hover para botões do modal */
-.modal-actions .btn:hover {
-  transform: translateY(-2px);
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+    margin: 20px auto;
+  }
+  
+  .game-card {
+    padding: 24px;
+    border-radius: 20px;
+  }
+  
+  .wheel-wrap {
+    width: 280px;
+    height: 280px;
+  }
+  
+  svg {
+    width: 280px;
+    height: 280px;
+  }
+  
+  .controls {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .modal-box {
+    width: 90%;
+    max-width: 400px;
+  }
+  
+  .topbar {
+    padding: 12px 16px;
+  }
+  
+  .brand {
+    font-size: 1.2rem;
+  }
+  
+  .actions {
+    gap: 12px;
+  }
+  
+  .quick-bets {
+    gap: 8px;
+  }
+  
+  .quick-bet-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .btn-play {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    min-width: 140px;
+  }
 }
 
-/* Melhorias na responsividade */
 @media (max-width: 480px) {
   .notification {
     right: 10px;
@@ -648,5 +1041,22 @@ svg path:hover {
   
   .bet input {
     width: 120px;
+  }
+  
+  .modal-body {
+    padding: 24px;
+  }
+  
+  .modal-header {
+    padding: 20px 24px;
+  }
+  
+  .modal-actions {
+    padding: 20px 24px;
+    flex-direction: column;
+  }
+  
+  .quick-deposit {
+    grid-template-columns: 1fr;
   }
 }

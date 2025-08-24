@@ -1,4 +1,5 @@
 const STORAGE_KEY = "senac_roleta_balance";
+const HISTORY_KEY = "senac_roleta_history";
 const HOUSE_PROB = { lose: 0.65, win: 0.35 };
 const MULTIPLIER = 2;
 const SLICE_COUNT = 8;
@@ -10,6 +11,17 @@ const fmt = (n) => (n || 0).toLocaleString("pt-BR", {
   maximumFractionDigits: 2 
 });
 
+// Formatação de data/hora
+const formatDateTime = (date) => {
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
 // Funções de localStorage
 const readBalance = () => { 
   const b = Number(localStorage.getItem(STORAGE_KEY)); 
@@ -18,37 +30,147 @@ const readBalance = () => {
 
 const writeBalance = (v) => localStorage.setItem(STORAGE_KEY, String(v));
 
-// Elementos DOM
-const balanceEl = document.getElementById("balance");
-const btnDeposit = document.getElementById("btn-deposit");
-const btnWithdraw = document.getElementById("btn-withdraw");
-const btnPlay = document.getElementById("btn-play");
-const betInput = document.getElementById("bet-amount");
-const lastResult = document.getElementById("last-result");
-const modal = document.getElementById("modal");
-const depositValue = document.getElementById("deposit-value");
-const confirmDeposit = document.getElementById("confirm-deposit");
-const cancelDeposit = document.getElementById("cancel-deposit");
-const wheel = document.getElementById("wheel");
-const slicesGroup = document.getElementById("slices");
+const readHistory = () => {
+  try {
+    const history = localStorage.getItem(HISTORY_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch {
+    return [];
+  }
+};
 
-// Atualiza UI do saldo
+const writeHistory = (history) => {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error("Erro ao salvar histórico:", error);
+  }
+};
+
+// Elementos DOM
+const elements = {
+  balance: document.getElementById("balance"),
+  btnDeposit: document.getElementById("btn-deposit"),
+  btnWithdraw: document.getElementById("btn-withdraw"),
+  btnPlay: document.getElementById("btn-play"),
+  betInput: document.getElementById("bet-amount"),
+  lastResult: document.getElementById("last-result"),
+  modal: document.getElementById("modal"),
+  withdrawModal: document.getElementById("withdraw-modal"),
+  depositValue: document.getElementById("deposit-value"),
+  withdrawValue: document.getElementById("withdraw-value"),
+  confirmDeposit: document.getElementById("confirm-deposit"),
+  cancelDeposit: document.getElementById("cancel-deposit"),
+  confirmWithdraw: document.getElementById("confirm-withdraw"),
+  cancelWithdraw: document.getElementById("cancel-withdraw"),
+  closeDeposit: document.getElementById("close-deposit"),
+  closeWithdraw: document.getElementById("close-withdraw"),
+  wheel: document.getElementById("wheel"),
+  slicesGroup: document.getElementById("slices"),
+  resultDisplay: document.getElementById("result-display"),
+  resultIcon: document.getElementById("result-display")?.querySelector(".result-icon"),
+  resultText: document.getElementById("result-display")?.querySelector(".result-text"),
+  resultAmount: document.getElementById("result-display")?.querySelector(".result-amount"),
+  betHistory: document.getElementById("bet-history"),
+  clearHistory: document.getElementById("clear-history"),
+  profileMenu: document.getElementById("profile-menu"),
+  profileDropdown: document.getElementById("profile-menu")?.querySelector(".profile-dropdown"),
+  availableBalance: document.getElementById("available-balance")
+};
+
+// Constantes para cores
+const COLORS = {
+  success: "#22c55e",
+  error: "#ef4444",
+  warning: "#f59e0b"
+};
+
+// Elementos de áudio
+const audioElements = {
+  spin: document.getElementById("spin-sound"),
+  win: document.getElementById("win-sound"),
+  lose: document.getElementById("lose-sound")
+};
+
+// Função para tocar som
+function playSound(type) {
+  try {
+    if (audioElements[type]) {
+      audioElements[type].currentTime = 0;
+      audioElements[type].play().catch(() => {});
+    }
+  } catch (error) {
+    console.log("Áudio não disponível");
+  }
+}
+
+// Função utilitária para criar elementos SVG
+function createSVGElement(type, attributes = {}) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", type);
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, value);
+  });
+  return element;
+}
+
+// Atualiza UI do saldo com animação
 function setBalanceUI() { 
+  const balanceEl = elements.balance;
   balanceEl.textContent = fmt(readBalance()); 
   
-  // Adiciona animação de atualização
+  // Animação de atualização
   balanceEl.style.transform = "scale(1.1)";
-  balanceEl.style.color = "#22c55e";
+  balanceEl.style.color = COLORS.success;
   setTimeout(() => {
     balanceEl.style.transform = "scale(1)";
-    balanceEl.style.color = "#22c55e";
+    balanceEl.style.color = COLORS.success;
   }, 200);
+}
+
+// Cria gradientes SVG
+function createSVGGradients() {
+  const defs = createSVGElement("defs");
+  
+  const gradients = [
+    {
+      id: "winGradient",
+      colors: ["#22c55e", "#16a34a"]
+    },
+    {
+      id: "loseGradient", 
+      colors: ["#ef4444", "#dc2626"]
+    }
+  ];
+  
+  gradients.forEach(({ id, colors }) => {
+    const gradient = createSVGElement("linearGradient", {
+      id,
+      x1: "0%", y1: "0%",
+      x2: "100%", y2: "100%"
+    });
+    
+    colors.forEach((color, index) => {
+      const stop = createSVGElement("stop", {
+        offset: `${index * 100}%`,
+        "stop-color": color
+      });
+      gradient.appendChild(stop);
+    });
+    
+    defs.appendChild(gradient);
+  });
+  
+  return defs;
 }
 
 // Desenha a roleta
 function drawWheel() {
-  slicesGroup.innerHTML = "";
+  elements.slicesGroup.innerHTML = "";
   const angle = 360 / SLICE_COUNT;
+  
+  // Adiciona gradientes primeiro
+  const defs = createSVGGradients();
+  elements.wheel.insertBefore(defs, elements.wheel.firstChild);
   
   for (let i = 0; i < SLICE_COUNT; i++) {
     const start = (i * angle - 90) * (Math.PI / 180);
@@ -60,133 +182,154 @@ function drawWheel() {
     const x2 = 100 + r * Math.cos(end);
     const y2 = 100 + r * Math.sin(end);
     
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", `M 100 100 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`);
+    // Cria slice
+    const path = createSVGElement("path", {
+      d: `M 100 100 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`,
+      class: i % 2 === 0 ? "win-slice" : "lose-slice",
+      style: `fill: url(#${i % 2 === 0 ? 'win' : 'lose'}Gradient)`
+    });
     
-    // Adiciona cores alternadas para WIN/LOSE
-    if (i % 2 === 0) {
-      path.setAttribute("class", "win-slice");
-      path.style.fill = "url(#winGradient)";
-    } else {
-      path.setAttribute("class", "lose-slice");
-      path.style.fill = "url(#loseGradient)";
-    }
+    elements.slicesGroup.appendChild(path);
     
-    slicesGroup.appendChild(path);
-    
-    // Labels das seções
+    // Cria label
     const labelAngle = (i + 0.5) * angle - 90;
     const lx = 100 + 60 * Math.cos((labelAngle * Math.PI) / 180);
     const ly = 100 + 60 * Math.sin((labelAngle * Math.PI) / 180);
     
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", lx);
-    text.setAttribute("y", ly);
-    text.setAttribute("class", "slice-label");
+    const text = createSVGElement("text", {
+      x: lx,
+      y: ly,
+      class: "slice-label"
+    });
     text.textContent = i % 2 === 0 ? "WIN" : "LOSE";
-    slicesGroup.appendChild(text);
+    
+    elements.slicesGroup.appendChild(text);
   }
-  
-  // Adiciona gradientes SVG
-  addSVGGradients();
 }
 
-// Adiciona gradientes SVG para as cores
-function addSVGGradients() {
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  
-  // Gradiente para WIN
-  const winGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-  winGradient.setAttribute("id", "winGradient");
-  winGradient.setAttribute("x1", "0%");
-  winGradient.setAttribute("y1", "0%");
-  winGradient.setAttribute("x2", "100%");
-  winGradient.setAttribute("y2", "100%");
-  
-  const winStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  winStop1.setAttribute("offset", "0%");
-  winStop1.setAttribute("stop-color", "#22c55e");
-  
-  const winStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  winStop2.setAttribute("offset", "100%");
-  winStop2.setAttribute("stop-color", "#16a34a");
-  
-  winGradient.appendChild(winStop1);
-  winGradient.appendChild(winStop2);
-  
-  // Gradiente para LOSE
-  const loseGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-  loseGradient.setAttribute("id", "loseGradient");
-  loseGradient.setAttribute("x1", "0%");
-  loseGradient.setAttribute("y1", "0%");
-  loseGradient.setAttribute("x2", "100%");
-  loseGradient.setAttribute("y2", "100%");
-  
-  const loseStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  loseStop1.setAttribute("offset", "0%");
-  loseStop1.setAttribute("stop-color", "#ef4444");
-  
-  const loseStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  loseStop2.setAttribute("offset", "100%");
-  loseStop2.setAttribute("stop-color", "#dc2626");
-  
-  loseGradient.appendChild(loseStop1);
-  loseGradient.appendChild(loseStop2);
-  
-  defs.appendChild(winGradient);
-  defs.appendChild(loseGradient);
-  
-  // Insere os gradientes no início do SVG
-  wheel.insertBefore(defs, wheel.firstChild);
-}
-
-// Modal functions
-function openModal() { 
+// Funções do modal
+function openModal(modalType = 'deposit') { 
+  const modal = modalType === 'deposit' ? elements.modal : elements.withdrawModal;
   modal.classList.remove("hidden");
   modal.classList.add("show");
-  depositValue.focus();
   
-  // Adiciona efeito de entrada
-  setTimeout(() => {
-    modal.classList.add("show");
-  }, 10);
+  if (modalType === 'deposit') {
+    elements.depositValue.focus();
+  } else {
+    elements.withdrawValue.focus();
+    updateAvailableBalance();
+  }
 }
 
-function closeModal() { 
+function closeModal(modalType = 'deposit') { 
+  const modal = modalType === 'deposit' ? elements.modal : elements.withdrawModal;
   modal.classList.remove("show");
   setTimeout(() => {
     modal.classList.add("hidden");
   }, 300);
 }
 
-// Funções de depósito e saque
-function deposit(v) { 
-  if (v <= 0) return;
-  
-  const newBalance = readBalance() + v;
-  writeBalance(newBalance);
-  setBalanceUI();
-  
-  // Feedback visual
-  showNotification(`Depósito de R$ ${fmt(v)} realizado com sucesso!`, 'success');
+// Atualiza saldo disponível no modal de saque
+function updateAvailableBalance() {
+  if (elements.availableBalance) {
+    elements.availableBalance.textContent = `R$ ${fmt(readBalance())}`;
+  }
 }
 
-function withdraw(v) { 
-  if (v <= 0) return;
+// Função genérica para operações financeiras
+function updateBalance(amount, operation = 'add') {
+  if (amount <= 0) return false;
   
-  const b = readBalance();
-  const val = Math.min(v, b);
+  const currentBalance = readBalance();
+  const newBalance = operation === 'add' ? currentBalance + amount : currentBalance - amount;
   
-  if (val === 0) {
+  if (operation === 'subtract' && newBalance < 0) return false;
+  
+  writeBalance(newBalance);
+  setBalanceUI();
+  return true;
+}
+
+// Funções de depósito e saque
+function deposit(amount) { 
+  if (updateBalance(amount, 'add')) {
+    showNotification(`Depósito de R$ ${fmt(amount)} realizado com sucesso!`, 'success');
+  }
+}
+
+function withdraw(amount) { 
+  if (updateBalance(amount, 'subtract')) {
+    showNotification(`Saque de R$ ${fmt(amount)} realizado com sucesso!`, 'success');
+  } else {
     showNotification("Saldo insuficiente para saque!", 'error');
+  }
+}
+
+// Adiciona aposta ao histórico
+function addToHistory(bet, outcome, prize, balanceAfter) {
+  const history = readHistory();
+  const betRecord = {
+    id: Date.now(),
+    bet: bet,
+    outcome: outcome,
+    prize: prize,
+    balanceAfter: balanceAfter,
+    timestamp: new Date(),
+    profit: outcome === 'WIN' ? prize - bet : -bet
+  };
+  
+  history.unshift(betRecord);
+  
+  // Mantém apenas os últimos 50 registros
+  if (history.length > 50) {
+    history.splice(50);
+  }
+  
+  writeHistory(history);
+  updateHistoryUI();
+}
+
+// Atualiza interface do histórico
+function updateHistoryUI() {
+  const history = readHistory();
+  const historyContainer = elements.betHistory;
+  
+  if (!historyContainer) return;
+  
+  if (history.length === 0) {
+    historyContainer.innerHTML = `
+      <div class="history-placeholder">
+        <i class="fas fa-info-circle"></i>
+        <p>Nenhuma aposta realizada ainda</p>
+      </div>
+    `;
     return;
   }
   
-  writeBalance(b - val);
-  setBalanceUI();
-  
-  // Feedback visual
-  showNotification(`Saque de R$ ${fmt(val)} realizado com sucesso!`, 'success');
+  historyContainer.innerHTML = history.map(record => `
+    <div class="bet-item">
+      <div class="bet-info">
+        <div class="bet-amount">R$ ${fmt(record.bet)}</div>
+        <div class="bet-time">${formatDateTime(new Date(record.timestamp))}</div>
+      </div>
+      <div class="bet-result ${record.outcome.toLowerCase()}">
+        <i class="fas fa-${record.outcome === 'WIN' ? 'trophy' : 'times-circle'}"></i>
+        ${record.outcome}
+      </div>
+      <div class="bet-balance">
+        R$ ${fmt(record.balanceAfter)}
+      </div>
+    </div>
+  `).join('');
+}
+
+// Limpa histórico
+function clearHistory() {
+  if (confirm("Tem certeza que deseja limpar todo o histórico?")) {
+    writeHistory([]);
+    updateHistoryUI();
+    showNotification("Histórico limpo com sucesso!", 'info');
+  }
 }
 
 // Determina resultado aleatório
@@ -194,10 +337,35 @@ function randomOutcome() {
   return Math.random() < HOUSE_PROB.lose ? "LOSE" : "WIN"; 
 }
 
+// Mostra resultado em destaque
+function showResultDisplay(outcome, amount) {
+  if (!elements.resultDisplay || !elements.resultIcon || !elements.resultText || !elements.resultAmount) return;
+  
+  const icon = outcome === 'WIN' ? '🎉' : '💔';
+  const text = outcome === 'WIN' ? 'VITÓRIA!' : 'DERROTA';
+  const color = outcome === 'WIN' ? COLORS.success : COLORS.error;
+  
+  elements.resultIcon.textContent = icon;
+  elements.resultText.textContent = text;
+  elements.resultAmount.textContent = outcome === 'WIN' ? `+R$ ${fmt(amount)}` : `-R$ ${fmt(amount)}`;
+  
+  elements.resultDisplay.style.borderColor = color;
+  elements.resultDisplay.classList.remove('hidden');
+  elements.resultDisplay.classList.add('show');
+  
+  // Esconde após 3 segundos
+  setTimeout(() => {
+    elements.resultDisplay.classList.remove('show');
+    setTimeout(() => {
+      elements.resultDisplay.classList.add('hidden');
+    }, 500);
+  }, 3000);
+}
+
 // Animação visual da roleta
 function spinVisualTo(outcome) { 
   const anglePerSlice = 360 / SLICE_COUNT;
-  let candidateIndexes = [];
+  const candidateIndexes = [];
   
   for (let i = 0; i < SLICE_COUNT; i++) {
     const isWin = i % 2 === 0;
@@ -210,55 +378,74 @@ function spinVisualTo(outcome) {
   const fullSpins = 4;
   const targetAngle = fullSpins * 360 + idx * anglePerSlice + anglePerSlice / 2;
   
-  wheel.style.transform = `rotate(-22.5deg) rotate(${targetAngle}deg)`;
-  wheel.classList.add("spin");
+  elements.wheel.style.transform = `rotate(-22.5deg) rotate(${targetAngle}deg)`;
+  elements.wheel.classList.add("spin");
   
-  return new Promise(r => setTimeout(r, 2500));
+  return new Promise(resolve => setTimeout(resolve, 2500));
 }
 
 // Função principal do jogo
 async function play() { 
   if (spinning) return;
   
-  const bet = Math.max(1, Number(betInput.value || 0));
-  const b = readBalance();
+  const bet = Math.max(1, Number(elements.betInput.value || 0));
+  const currentBalance = readBalance();
   
-  if (bet > b) {
+  if (bet > currentBalance) {
     showNotification("Saldo insuficiente para esta aposta!", 'error');
     return;
   }
   
+  // Estado de loading
   spinning = true;
-  btnPlay.disabled = true;
-  lastResult.textContent = "Girando...";
-  lastResult.style.color = "#f59e0b";
+  elements.btnPlay.disabled = true;
+  elements.lastResult.textContent = "Girando...";
+  elements.lastResult.style.color = COLORS.warning;
+  
+  // Toca som de giro
+  playSound('spin');
   
   const outcome = randomOutcome();
   await spinVisualTo(outcome);
   
+  // Processa resultado
+  let prize = 0;
+  let balanceAfter = 0;
+  
   if (outcome === "WIN") {
-    const prize = bet * MULTIPLIER;
-    writeBalance(b - bet + prize);
-    lastResult.textContent = `🎉 WIN! +R$ ${fmt(prize - bet)}`;
-    lastResult.style.color = "#22c55e";
+    prize = bet * MULTIPLIER;
+    balanceAfter = currentBalance - bet + prize;
+    writeBalance(balanceAfter);
+    elements.lastResult.textContent = `🎉 WIN! +R$ ${fmt(prize - bet)}`;
+    elements.lastResult.style.color = COLORS.success;
     showNotification(`Parabéns! Você ganhou R$ ${fmt(prize - bet)}!`, 'success');
+    playSound('win');
   } else {
-    writeBalance(b - bet);
-    lastResult.textContent = `💔 LOSE! -R$ ${fmt(bet)}`;
-    lastResult.style.color = "#ef4444";
+    balanceAfter = currentBalance - bet;
+    writeBalance(balanceAfter);
+    elements.lastResult.textContent = `💔 LOSE! -R$ ${fmt(bet)}`;
+    elements.lastResult.style.color = COLORS.error;
     showNotification(`Que pena! Você perdeu R$ ${fmt(bet)}.`, 'error');
+    playSound('lose');
   }
   
+  // Adiciona ao histórico
+  addToHistory(bet, outcome, prize, balanceAfter);
+  
+  // Mostra resultado em destaque
+  showResultDisplay(outcome, outcome === 'WIN' ? prize - bet : bet);
+  
+  // Reset do estado
   setBalanceUI();
-  wheel.classList.remove("spin");
-  wheel.style.transform = "rotate(-22.5deg)";
+  elements.wheel.classList.remove("spin");
+  elements.wheel.style.transform = "rotate(-22.5deg)";
   spinning = false;
-  btnPlay.disabled = false;
+  elements.btnPlay.disabled = false;
 }
 
-// Sistema de notificações
+// Sistema de notificações otimizado
 function showNotification(message, type = 'info') {
-  // Remove notificação anterior se existir
+  // Remove notificação anterior
   const existingNotification = document.querySelector('.notification');
   if (existingNotification) {
     existingNotification.remove();
@@ -276,52 +463,127 @@ function showNotification(message, type = 'info') {
   document.body.appendChild(notification);
   
   // Anima entrada
-  setTimeout(() => {
-    notification.classList.add('show');
-  }, 100);
+  setTimeout(() => notification.classList.add('show'), 100);
   
   // Remove após 3 segundos
   setTimeout(() => {
     notification.classList.remove('show');
-    setTimeout(() => {
-      notification.remove();
-    }, 300);
+    setTimeout(() => notification.remove(), 300);
   }, 3000);
 }
 
-// Event listeners
-btnDeposit.addEventListener("click", openModal);
-cancelDeposit.addEventListener("click", closeModal);
+// Funções para botões rápidos
+function setQuickBet(value) {
+  elements.betInput.value = value;
+  elements.betInput.focus();
+  
+  // Remove classe ativa de todos os botões
+  document.querySelectorAll('.quick-bet-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Adiciona classe ativa ao botão clicado
+  event.target.classList.add('active');
+}
 
-confirmDeposit.addEventListener("click", () => { 
-  const v = Number(depositValue.value || 0);
-  if (v > 0) {
-    deposit(v);
-    closeModal();
-    depositValue.value = "100"; // Reset para valor padrão
+function setQuickDeposit(value) {
+  elements.depositValue.value = value;
+}
+
+// Toggle do menu dropdown
+function toggleProfileDropdown() {
+  if (elements.profileDropdown) {
+    elements.profileDropdown.classList.toggle('show');
+  }
+}
+
+// Event listeners
+elements.btnDeposit.addEventListener("click", () => openModal('deposit'));
+elements.btnWithdraw.addEventListener("click", () => openModal('withdraw'));
+
+// Botões de fechar modal
+elements.closeDeposit.addEventListener("click", () => closeModal('deposit'));
+elements.closeWithdraw.addEventListener("click", () => closeModal('withdraw'));
+
+// Botões de cancelar
+elements.cancelDeposit.addEventListener("click", () => closeModal('deposit'));
+elements.cancelWithdraw.addEventListener("click", () => closeModal('withdraw'));
+
+// Confirmações
+elements.confirmDeposit.addEventListener("click", () => { 
+  const amount = Number(elements.depositValue.value || 0);
+  if (amount > 0) {
+    deposit(amount);
+    closeModal('deposit');
+    elements.depositValue.value = "100"; // Reset para valor padrão
   } else {
     showNotification("Por favor, insira um valor válido!", 'error');
   }
 });
 
-btnWithdraw.addEventListener("click", () => { 
-  const v = Number(prompt("Valor para saque (R$):", "50") || 0);
-  if (v > 0) withdraw(v);
-});
-
-btnPlay.addEventListener("click", play);
-
-// Fecha modal ao clicar fora
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) {
-    closeModal();
+elements.confirmWithdraw.addEventListener("click", () => { 
+  const amount = Number(elements.withdrawValue.value || 0);
+  if (amount > 0) {
+    withdraw(amount);
+    closeModal('withdraw');
+    elements.withdrawValue.value = "50"; // Reset para valor padrão
+  } else {
+    showNotification("Por favor, insira um valor válido!", 'error');
   }
 });
 
-// Fecha modal com ESC
+// Botões rápidos de aposta
+document.querySelectorAll('.quick-bet-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => setQuickBet(Number(e.target.dataset.value)));
+});
+
+// Botões rápidos de depósito
+document.querySelectorAll('.quick-deposit-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => setQuickDeposit(Number(e.target.dataset.value)));
+});
+
+// Jogo
+elements.btnPlay.addEventListener("click", play);
+
+// Histórico
+if (elements.clearHistory) {
+  elements.clearHistory.addEventListener("click", clearHistory);
+}
+
+// Profile menu
+if (elements.profileMenu) {
+  elements.profileMenu.addEventListener("click", toggleProfileDropdown);
+}
+
+// Fecha modais ao clicar fora
+elements.modal.addEventListener("click", (e) => {
+  if (e.target === elements.modal) {
+    closeModal('deposit');
+  }
+});
+
+elements.withdrawModal.addEventListener("click", (e) => {
+  if (e.target === elements.withdrawModal) {
+    closeModal('withdraw');
+  }
+});
+
+// Fecha modais com ESC
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !modal.classList.contains("hidden")) {
-    closeModal();
+  if (e.key === "Escape") {
+    if (!elements.modal.classList.contains("hidden")) {
+      closeModal('deposit');
+    }
+    if (!elements.withdrawModal.classList.contains("hidden")) {
+      closeModal('withdraw');
+    }
+  }
+});
+
+// Fecha dropdown ao clicar fora
+document.addEventListener("click", (e) => {
+  if (elements.profileDropdown && !elements.profileMenu.contains(e.target)) {
+    elements.profileDropdown.classList.remove('show');
   }
 });
 
@@ -332,4 +594,5 @@ document.addEventListener("keydown", (e) => {
   }
   setBalanceUI();
   drawWheel();
+  updateHistoryUI();
 })();

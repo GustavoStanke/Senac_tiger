@@ -5,30 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SENAC Roleta</title>
   <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">SENAC <small>Tiger</small></div>
     <div class="actions">
-      <button id="btn-deposit" class="btn">Depositar</button>
-      <button id="btn-withdraw" class="btn btn-ghost">Sacar</button>
+      <button id="btn-deposit" class="btn">
+        <i class="fas fa-plus"></i> Depositar
+      </button>
+      <button id="btn-withdraw" class="btn btn-ghost">
+        <i class="fas fa-minus"></i> Sacar
+      </button>
       <div class="balance" title="Saldo atual">
+        <i class="fas fa-coins"></i>
         R$ <span id="balance">0,00</span>
       </div>
-      <div class="avatar" title="Perfil">👤</div>
+      <div class="avatar" title="Perfil" id="profile-menu">
+        <i class="fas fa-user"></i>
+        <div class="profile-dropdown hidden">
+          <div class="dropdown-item">
+            <i class="fas fa-history"></i>
+            <span>Histórico</span>
+          </div>
+          <div class="dropdown-item">
+            <i class="fas fa-cog"></i>
+            <span>Configurações</span>
+          </div>
+          <div class="dropdown-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sair</span>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
   <main class="container">
     <section class="game-card">
-      <div class="game-header">Roleta</div>
+      <div class="game-header">🎰 Roleta 🎰</div>
 
-      <div class="wheel-wrap">
-        <div class="pointer">▼</div>
-        <svg id="wheel" viewBox="0 0 200 200">
-          <g id="slices"></g>
-          <circle cx="100" cy="100" r="12" class="hub"/>
-        </svg>
+      <div class="wheel-container">
+        <div class="wheel-wrap">
+          <div class="pointer">▼</div>
+          <svg id="wheel" viewBox="0 0 200 200">
+            <g id="slices"></g>
+            <circle cx="100" cy="100" r="12" class="hub"/>
+          </svg>
+        </div>
+        
+        <!-- Resultado em destaque -->
+        <div id="result-display" class="result-display hidden">
+          <div class="result-content">
+            <div class="result-icon"></div>
+            <div class="result-text"></div>
+            <div class="result-amount"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botões rápidos de aposta -->
+      <div class="quick-bets">
+        <button class="quick-bet-btn" data-value="10">+R$ 10</button>
+        <button class="quick-bet-btn" data-value="50">+R$ 50</button>
+        <button class="quick-bet-btn" data-value="100">+R$ 100</button>
+        <button class="quick-bet-btn" data-value="500">+R$ 500</button>
       </div>
 
       <div class="controls">
@@ -36,7 +77,10 @@
           Aposta:
           <input id="bet-amount" type="number" min="1" value="10" step="1"/>
         </label>
-        <button id="btn-play" class="btn btn-primary">Play</button>
+        <button id="btn-play" class="btn btn-primary btn-play">
+          <i class="fas fa-play"></i>
+          <span>PLAY</span>
+        </button>
       </div>
 
       <p id="last-result" class="result">—</p>
@@ -44,20 +88,102 @@
         Probabilidade configurada: <strong id="house-edge">65% Lose / 35% Win</strong>
       </small>
     </section>
+
+    <!-- Histórico de apostas -->
+    <section class="history-card">
+      <div class="history-header">
+        <h3><i class="fas fa-history"></i> Histórico de Apostas</h3>
+        <button id="clear-history" class="btn btn-ghost btn-sm">
+          <i class="fas fa-trash"></i> Limpar
+        </button>
+      </div>
+      <div id="bet-history" class="bet-history">
+        <div class="history-placeholder">
+          <i class="fas fa-info-circle"></i>
+          <p>Nenhuma aposta realizada ainda</p>
+        </div>
+      </div>
+    </section>
   </main>
 
+  <!-- Modal de Depósito -->
   <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-box">
-      <h2>Depósito</h2>
-      <label>Valor (R$):
-        <input id="deposit-value" type="number" min="1" value="100" step="1"/>
-      </label>
+      <div class="modal-header">
+        <h2><i class="fas fa-plus-circle"></i> Depósito</h2>
+        <button class="modal-close" id="close-deposit">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <label>Valor (R$):
+          <input id="deposit-value" type="number" min="1" value="100" step="1"/>
+        </label>
+        
+        <!-- Botões rápidos de depósito -->
+        <div class="quick-deposit">
+          <button class="quick-deposit-btn" data-value="50">R$ 50</button>
+          <button class="quick-deposit-btn" data-value="100">R$ 100</button>
+          <button class="quick-deposit-btn" data-value="200">R$ 200</button>
+          <button class="quick-deposit-btn" data-value="500">R$ 500</button>
+        </div>
+      </div>
+      
       <div class="modal-actions">
-        <button id="confirm-deposit" class="btn btn-primary">Confirmar</button>
-        <button id="cancel-deposit" class="btn btn-ghost">Cancelar</button>
+        <button id="confirm-deposit" class="btn btn-primary">
+          <i class="fas fa-check"></i> Confirmar
+        </button>
+        <button id="cancel-deposit" class="btn btn-ghost">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
       </div>
     </div>
   </div>
+
+  <!-- Modal de Saque -->
+  <div id="withdraw-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2><i class="fas fa-minus-circle"></i> Saque</h2>
+        <button class="modal-close" id="close-withdraw">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <label>Valor para saque (R$):
+          <input id="withdraw-value" type="number" min="1" value="50" step="1"/>
+        </label>
+        
+        <div class="withdraw-info">
+          <p>Saldo disponível: <strong id="available-balance">R$ 0,00</strong></p>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button id="confirm-withdraw" class="btn btn-primary">
+          <i class="fas fa-check"></i> Confirmar
+        </button>
+        <button id="cancel-withdraw" class="btn btn-ghost">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Áudio para efeitos sonoros -->
+  <audio id="spin-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+  </audio>
+  
+  <audio id="win-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+  </audio>
+  
+  <audio id="lose-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+  </audio>
 
   <script src="app.js" defer></script>
 </body>
