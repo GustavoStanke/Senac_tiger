@@ -127,43 +127,83 @@ function setBalanceUI() {
   }, 200);
 }
 
-// Cria gradientes SVG
+// Cria gradientes SVG mais atrativos
 function createSVGGradients() {
   const defs = createSVGElement("defs");
   
-  const gradients = [
-    {
-      id: "winGradient",
-      colors: ["#22c55e", "#16a34a"]
-    },
-    {
-      id: "loseGradient", 
-      colors: ["#ef4444", "#dc2626"]
-    }
+  // Gradiente para WIN - Verde com brilho
+  const winGradient = createSVGElement("linearGradient", {
+    id: "winGradient",
+    x1: "0%", y1: "0%",
+    x2: "100%", y2: "100%"
+  });
+  
+  const winStops = [
+    { offset: "0%", color: "#4CAF50" },
+    { offset: "30%", color: "#66BB6A" },
+    { offset: "70%", color: "#388E3C" },
+    { offset: "100%", color: "#2E7D32" }
   ];
   
-  gradients.forEach(({ id, colors }) => {
-    const gradient = createSVGElement("linearGradient", {
-      id,
-      x1: "0%", y1: "0%",
-      x2: "100%", y2: "100%"
+  winStops.forEach(stop => {
+    const stopElement = createSVGElement("stop", {
+      offset: stop.offset,
+      "stop-color": stop.color
     });
-    
-    colors.forEach((color, index) => {
-      const stop = createSVGElement("stop", {
-        offset: `${index * 100}%`,
-        "stop-color": color
-      });
-      gradient.appendChild(stop);
-    });
-    
-    defs.appendChild(gradient);
+    winGradient.appendChild(stopElement);
   });
+  
+  // Gradiente para LOSE - Vermelho com brilho
+  const loseGradient = createSVGElement("linearGradient", {
+    id: "loseGradient",
+    x1: "0%", y1: "0%",
+    x2: "100%", y2: "100%"
+  });
+  
+  const loseStops = [
+    { offset: "0%", color: "#F44336" },
+    { offset: "30%", color: "#EF5350" },
+    { offset: "70%", color: "#D32F2F" },
+    { offset: "100%", color: "#C62828" }
+  ];
+  
+  loseStops.forEach(stop => {
+    const stopElement = createSVGElement("stop", {
+      offset: stop.offset,
+      "stop-color": stop.color
+    });
+    loseGradient.appendChild(stopElement);
+  });
+  
+  // Gradiente para bordas das slices
+  const borderGradient = createSVGElement("linearGradient", {
+    id: "borderGradient",
+    x1: "0%", y1: "0%",
+    x2: "100%", y2: "100%"
+  });
+  
+  const borderStops = [
+    { offset: "0%", color: "#FFD700" },
+    { offset: "50%", color: "#FFA000" },
+    { offset: "100%", color: "#FFD700" }
+  ];
+  
+  borderStops.forEach(stop => {
+    const stopElement = createSVGElement("stop", {
+      offset: stop.offset,
+      "stop-color": stop.color
+    });
+    borderGradient.appendChild(stopElement);
+  });
+  
+  defs.appendChild(winGradient);
+  defs.appendChild(loseGradient);
+  defs.appendChild(borderGradient);
   
   return defs;
 }
 
-// Desenha a roleta
+// Desenha a roleta com melhorias visuais
 function drawWheel() {
   elements.slicesGroup.innerHTML = "";
   const angle = 360 / SLICE_COUNT;
@@ -182,19 +222,19 @@ function drawWheel() {
     const x2 = 100 + r * Math.cos(end);
     const y2 = 100 + r * Math.sin(end);
     
-    // Cria slice
+    // Cria slice com borda dourada
     const path = createSVGElement("path", {
       d: `M 100 100 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`,
       class: i % 2 === 0 ? "win-slice" : "lose-slice",
-      style: `fill: url(#${i % 2 === 0 ? 'win' : 'lose'}Gradient)`
+      style: `fill: url(#${i % 2 === 0 ? 'win' : 'lose'}Gradient); stroke: url(#borderGradient); stroke-width: 2;`
     });
     
     elements.slicesGroup.appendChild(path);
     
-    // Cria label
+    // Cria label com melhor posicionamento
     const labelAngle = (i + 0.5) * angle - 90;
-    const lx = 100 + 60 * Math.cos((labelAngle * Math.PI) / 180);
-    const ly = 100 + 60 * Math.sin((labelAngle * Math.PI) / 180);
+    const lx = 100 + 65 * Math.cos((labelAngle * Math.PI) / 180);
+    const ly = 100 + 65 * Math.sin((labelAngle * Math.PI) / 180);
     
     const text = createSVGElement("text", {
       x: lx,
@@ -204,6 +244,38 @@ function drawWheel() {
     text.textContent = i % 2 === 0 ? "WIN" : "LOSE";
     
     elements.slicesGroup.appendChild(text);
+  }
+  
+  // Adiciona círculo central decorativo
+  const centerCircle = createSVGElement("circle", {
+    cx: "100",
+    cy: "100",
+    r: "15",
+    fill: "url(#borderGradient)",
+    stroke: "#B8860B",
+    "stroke-width": "3",
+    filter: "drop-shadow(0 0 15px rgba(255, 215, 0, 0.8))"
+  });
+  
+  elements.slicesGroup.appendChild(centerCircle);
+  
+  // Adiciona linhas divisórias entre slices
+  for (let i = 0; i < SLICE_COUNT; i++) {
+    const lineAngle = i * angle - 90;
+    const x = 100 + 100 * Math.cos((lineAngle * Math.PI) / 180);
+    const y = 100 + 100 * Math.sin((lineAngle * Math.PI) / 180);
+    
+    const line = createSVGElement("line", {
+      x1: "100",
+      y1: "100",
+      x2: x.toString(),
+      y2: y.toString(),
+      stroke: "url(#borderGradient)",
+      "stroke-width": "2",
+      opacity: "0.6"
+    });
+    
+    elements.slicesGroup.appendChild(line);
   }
 }
 
