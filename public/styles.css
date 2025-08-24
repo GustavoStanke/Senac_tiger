@@ -1,0 +1,35 @@
+:root{
+  --bg:#0f172a;
+  --card:#111827;
+  --muted:#94a3b8;
+  --text:#e5e7eb;
+  --accent:#22d3ee;
+  --accent-2:#a78bfa;
+  --danger:#ef4444;
+  --ok:#22c55e;
+}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{ margin:0; font-family: ui-sans-serif, system-ui; color:var(--text); background: var(--bg); }
+.topbar{ display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:#111; color:#fff; }
+.brand{ font-weight:800; }
+.actions{ display:flex; align-items:center; gap:10px; }
+.balance{ padding:6px 10px; border-radius:12px; background:#111827; font-weight:700; }
+.avatar{ width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:#333; }
+.container{ max-width:980px; margin:40px auto; padding:0 16px; }
+.game-card{ background:var(--card); border-radius:18px; padding:24px; }
+.wheel-wrap{ position:relative; display:grid; place-items:center; margin:10px auto; width:320px; }
+.pointer{ position:absolute; top:-10px; font-size:22px; }
+svg{ width:320px; height:320px; transform:rotate(-22.5deg); }
+.hub{ fill:#0ea5e9; stroke:#0c4a6e; stroke-width:2; }
+.slice-label{ font-size:10px; font-weight:700; fill:#fff; text-anchor:middle; }
+.controls{ display:flex; gap:10px; align-items:center; justify-content:center; margin-top:6px; }
+.bet input{ background:#222; border:1px solid #444; color:var(--text); padding:6px 8px; border-radius:10px; width:100px; }
+.result{ text-align:center; min-height:24px; margin:12px 0 0; }
+.btn{ padding:8px 12px; border-radius:12px; background:#333; color:#fff; cursor:pointer; }
+.btn-primary{ background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#000; font-weight:800; }
+.modal{ position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.5); }
+.hidden{ display:none; }
+.modal-box{ width:400px; background:#222; border-radius:20px; padding:18px; color:#fff; }
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+.spin{ transition: transform 2.2s cubic-bezier(.17,.67,.32,1.35); }

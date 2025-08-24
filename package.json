@@ -1,0 +1,15 @@
+{
+  "name": "senac-roleta",
+  "version": "0.1.0",
+  "description": "Roleta de apostas - SENAC (Node + LocalStorage)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

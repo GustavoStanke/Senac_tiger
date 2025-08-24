@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SENAC Roleta</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">SENAC <small>tijuca</small></div>
+    <div class="actions">
+      <button id="btn-deposit" class="btn">Depositar</button>
+      <button id="btn-withdraw" class="btn btn-ghost">Sacar</button>
+      <div class="balance" title="Saldo atual">
+        R$ <span id="balance">0,00</span>
+      </div>
+      <div class="avatar" title="Perfil">👤</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="game-card">
+      <div class="game-header">Roleta</div>
+
+      <div class="wheel-wrap">
+        <div class="pointer">▼</div>
+        <svg id="wheel" viewBox="0 0 200 200">
+          <g id="slices"></g>
+          <circle cx="100" cy="100" r="12" class="hub"/>
+        </svg>
+      </div>
+
+      <div class="controls">
+        <label class="bet">
+          Aposta:
+          <input id="bet-amount" type="number" min="1" value="10" step="1"/>
+        </label>
+        <button id="btn-play" class="btn btn-primary">Play</button>
+      </div>
+
+      <p id="last-result" class="result">—</p>
+      <small class="hint">
+        Probabilidade configurada: <strong id="house-edge">65% Lose / 35% Win</strong>
+      </small>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-box">
+      <h2>Depósito</h2>
+      <label>Valor (R$):
+        <input id="deposit-value" type="number" min="1" value="100" step="1"/>
+      </label>
+      <div class="modal-actions">
+        <button id="confirm-deposit" class="btn btn-primary">Confirmar</button>
+        <button id="cancel-deposit" class="btn btn-ghost">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
