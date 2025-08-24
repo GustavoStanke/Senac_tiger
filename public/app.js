@@ -1,9 +1,96 @@
 const STORAGE_KEY = "senac_roleta_balance";
 const HISTORY_KEY = "senac_roleta_history";
-const HOUSE_PROB = { lose: 0.65, win: 0.35 };
 const MULTIPLIER = 2;
 const SLICE_COUNT = 8;
 let spinning = false;
+
+// Sistema de probabilidade dinâmica
+const PROBABILITY_CONFIG = {
+  initial: {
+    win: 0.60,    // 60% Win / 40% Lose nas primeiras rodadas
+    lose: 0.40
+  },
+  house: {
+    win: 0.25,    // 25% Win / 75% Lose após as primeiras rodadas
+    lose: 0.75
+  },
+  threshold: 4,   // Número de rodadas antes de mudar para probabilidade da casa
+  resetThreshold: 15  // Número de perdas seguidas para resetar
+};
+
+// Estado do jogo para probabilidade dinâmica
+let gameState = {
+  totalGames: 0,
+  consecutiveLosses: 0,
+  currentPhase: 'initial' // 'initial' ou 'house'
+};
+
+// Função para determinar a probabilidade atual
+function getCurrentProbability() {
+  if (gameState.consecutiveLosses >= PROBABILITY_CONFIG.resetThreshold) {
+    // Reset após muitas perdas seguidas
+    gameState.currentPhase = 'initial';
+    gameState.consecutiveLosses = 0;
+    console.log('🔄 Probabilidade resetada para fase inicial após muitas perdas!');
+  }
+  
+  if (gameState.totalGames < PROBABILITY_CONFIG.threshold) {
+    return PROBABILITY_CONFIG.initial;
+  } else {
+    return PROBABILITY_CONFIG.house;
+  }
+}
+
+// Função para gerar resultado baseado na probabilidade atual
+function generateResult() {
+  const probability = getCurrentProbability();
+  const random = Math.random();
+  
+  if (random < probability.win) {
+    return 'WIN';
+  } else {
+    return 'LOSE';
+  }
+}
+
+// Função para atualizar o estado do jogo
+function updateGameState(result) {
+  gameState.totalGames++;
+  
+  if (result === 'LOSE') {
+    gameState.consecutiveLosses++;
+  } else {
+    gameState.consecutiveLosses = 0;
+  }
+  
+  // Atualiza a fase baseada no número de jogadas
+  if (gameState.totalGames >= PROBABILITY_CONFIG.threshold) {
+    gameState.currentPhase = 'house';
+  }
+  
+  // Salva o estado automaticamente
+  saveGameState();
+  
+  console.log(`🎯 Jogo #${gameState.totalGames} - Fase: ${gameState.currentPhase} - Perdas seguidas: ${gameState.consecutiveLosses}`);
+  console.log(`📊 Probabilidade atual: WIN ${(getCurrentProbability().win * 100).toFixed(1)}% / LOSE ${(getCurrentProbability().lose * 100).toFixed(1)}%`);
+}
+
+// Função para atualizar a interface com informações de probabilidade
+function updateProbabilityUI() {
+  const probability = getCurrentProbability();
+  const phaseText = gameState.currentPhase === 'initial' ? 'Favorável ao Jogador' : 'Favorável à Casa';
+  const phaseColor = gameState.currentPhase === 'initial' ? '#4CAF50' : '#F44336';
+  
+  // Atualiza o elemento principal de probabilidade
+  const houseEdgeElement = document.getElementById('house-edge');
+  if (houseEdgeElement) {
+    houseEdgeElement.innerHTML = `
+      <span style="color: ${phaseColor}">${phaseText}</span><br>
+      <small>Probabilidade: WIN ${(probability.win * 100).toFixed(1)}% / LOSE ${(probability.lose * 100).toFixed(1)}%</small><br>
+      <small>Rodadas: ${gameState.totalGames}/${PROBABILITY_CONFIG.threshold} | Perdas seguidas: ${gameState.consecutiveLosses}/${PROBABILITY_CONFIG.resetThreshold}</small>
+    `;
+  }
+}
 
 // Formatação de números
 const fmt = (n) => (n || 0).toLocaleString("pt-BR", { 
@@ -47,6 +134,40 @@ const writeHistory = (history) => {
   }
 };
 
+// Funções para persistir o estado do jogo
+function saveGameState() {
+  localStorage.setItem('roulette_game_state', JSON.stringify(gameState));
+}
+
+function loadGameState() {
+  const savedState = localStorage.getItem('roulette_game_state');
+  if (savedState) {
+    try {
+      gameState = JSON.parse(savedState);
+      console.log('🔄 Estado do jogo carregado:', gameState);
+    } catch (error) {
+      console.error('❌ Erro ao carregar estado do jogo:', error);
+      gameState = {
+        totalGames: 0,
+        consecutiveLosses: 0,
+        currentPhase: 'initial'
+      };
+    }
+  }
+}
+
+// Função para resetar o estado do jogo (para testes)
+function resetGameState() {
+  gameState = {
+    totalGames: 0,
+    consecutiveLosses: 0,
+    currentPhase: 'initial'
+  };
+  saveGameState();
+  updateProbabilityUI();
+  showNotification('🔄 Estado do jogo resetado!', 'info');
+}
+
 // Elementos DOM
 const elements = {
   balance: document.getElementById("balance"),
@@ -75,7 +196,8 @@ const elements = {
   clearHistory: document.getElementById("clear-history"),
   profileMenu: document.getElementById("profile-menu"),
   profileDropdown: document.getElementById("profile-menu")?.querySelector(".profile-dropdown"),
-  availableBalance: document.getElementById("available-balance")
+  availableBalance: document.getElementById("available-balance"),
+  resetGameState: document.getElementById("reset-game-state")
 };
 
 // Constantes para cores
@@ -404,10 +526,10 @@ function clearHistory() {
   }
 }
 
-// Determina resultado aleatório
-function randomOutcome() { 
-  return Math.random() < HOUSE_PROB.lose ? "LOSE" : "WIN"; 
-}
+  // Determina resultado baseado na probabilidade dinâmica
+  function randomOutcome() { 
+    return generateResult(); 
+  }
 
 // Mostra resultado em destaque
 function showResultDisplay(outcome, amount) {
@@ -480,6 +602,9 @@ async function play() {
   const outcome = randomOutcome();
   await spinVisualTo(outcome);
   
+  // Atualiza o estado do jogo para probabilidade dinâmica
+  updateGameState(outcome);
+  
   // Processa resultado
   let prize = 0;
   let balanceAfter = 0;
@@ -506,6 +631,9 @@ async function play() {
   
   // Mostra resultado em destaque
   showResultDisplay(outcome, outcome === 'WIN' ? prize - bet : bet);
+  
+  // Atualiza a interface com informações de probabilidade
+  updateProbabilityUI();
   
   // Reset do estado
   setBalanceUI();
@@ -622,6 +750,11 @@ if (elements.clearHistory) {
   elements.clearHistory.addEventListener("click", clearHistory);
 }
 
+// Reset do estado do jogo
+if (elements.resetGameState) {
+  elements.resetGameState.addEventListener("click", resetGameState);
+}
+
 // Profile menu
 if (elements.profileMenu) {
   elements.profileMenu.addEventListener("click", toggleProfileDropdown);
@@ -664,7 +797,9 @@ document.addEventListener("click", (e) => {
   if (localStorage.getItem(STORAGE_KEY) === null) {
     writeBalance(0);
   }
+  loadGameState(); // Carrega estado do jogo salvo
   setBalanceUI();
   drawWheel();
   updateHistoryUI();
+  updateProbabilityUI(); // Inicializa interface de probabilidade
 })();

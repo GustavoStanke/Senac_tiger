@@ -84,9 +84,18 @@
       </div>
 
       <p id="last-result" class="result">—</p>
-      <small class="hint">
-        Probabilidade configurada: <strong id="house-edge">65% Lose / 35% Win</strong>
-      </small>
+      <div class="probability-info">
+        <div class="hint">
+          <strong id="house-edge">Favorável ao Jogador</strong><br>
+          <small>Probabilidade: WIN 60.0% / LOSE 40.0%</small><br>
+          <small>Rodadas: 0/4 | Perdas seguidas: 0/15</small>
+        </div>
+        <div class="probability-actions">
+          <button id="reset-game-state" class="btn btn-ghost btn-sm" title="Resetar estado do jogo">
+            <i class="fas fa-redo"></i> Reset
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- Histórico de apostas -->
