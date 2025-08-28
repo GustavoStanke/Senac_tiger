@@ -35,6 +35,28 @@
   --hub-color: #FFD700;
   --win-color: #4CAF50;
   --lose-color: #F44336;
+
+  /* Transições */
+  --transition: all 0.3s ease;
+}
+
+/* Tema Claro */
+[data-theme="light"] {
+  --bg: #F5F5F5;
+  --card: #FFFFFF;
+  --card-border: linear-gradient(145deg, #FFD700, #FFA000, #E0E0E0, #FFD700);
+  --muted: #666666;
+  --text: #222222;
+  --text-secondary: #555555;
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --topbar-bg: rgba(245, 245, 245, 0.95);
+  --shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 20px 45px -12px rgba(0, 0, 0, 0.2);
+}
+
+/* Transições suaves para elementos com tema */
+body, .topbar, .game-card, .history-card, .modal-box, .notification {
+  transition: var(--transition);
 }
 
 * {
@@ -54,6 +76,7 @@ body {
   overflow-x: hidden;
   position: relative;
   background-attachment: fixed;
+  transition: background-color 0.5s ease;
 }
 
 body::before {
@@ -69,6 +92,68 @@ body::before {
     radial-gradient(circle at 40% 40%, rgba(255, 160, 0, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
+  transition: var(--transition);
+}
+
+[data-theme="light"] body::before {
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(192, 192, 192, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 160, 0, 0.08) 0%, transparent 50%);
+}
+
+/* Toggle de tema */
+.theme-toggle {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  background: var(--input-bg);
+  border-radius: 50px;
+  border: 2px solid rgba(192, 192, 192, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  margin: 0 12px;
+  transition: var(--transition);
+}
+
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 0.3s ease;
+  left: 3px;
+}
+
+[data-theme="light"] .theme-toggle::before {
+  transform: translateX(24px);
+}
+
+.theme-toggle i {
+  font-size: 12px;
+  z-index: 2;
+  margin: 0 2px;
+  transition: var(--transition);
+}
+
+.theme-toggle .fa-sun {
+  color: #FFA500;
+}
+
+.theme-toggle .fa-moon {
+  color: #4A4A4A;
+}
+
+[data-theme="light"] .theme-toggle .fa-sun {
+  color: #FF8C00;
+}
+
+[data-theme="light"] .theme-toggle .fa-moon {
+  color: #888888;
 }
 
 /* Topbar */
@@ -84,6 +169,10 @@ body::before {
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+[data-theme="light"] .topbar {
+  border-bottom: 2px solid rgba(255, 215, 0, 0.5);
 }
 
 .brand {
@@ -121,6 +210,28 @@ body::before {
   align-items: center;
   gap: 8px;
   box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.balance::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: 0.5s;
+}
+
+.balance:hover::before {
+  left: 100%;
+}
+
+[data-theme="light"] .balance {
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
 }
 
 .balance i {
@@ -141,6 +252,29 @@ body::before {
   transition: all 0.3s ease;
   position: relative;
   box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  overflow: hidden;
+}
+
+.avatar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: rotate(45deg);
+  transition: all 0.5s ease;
+}
+
+.avatar:hover::before {
+  transform: rotate(45deg) translate(20px, 20px);
 }
 
 .avatar:hover {
@@ -152,6 +286,8 @@ body::before {
 .avatar i {
   font-size: 1.2rem;
   color: #1E1E1E;
+  position: relative;
+  z-index: 2;
 }
 
 /* Profile Dropdown */
@@ -168,14 +304,15 @@ body::before {
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(20px);
   opacity: 0;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
+  overflow: hidden;
 }
 
 .profile-dropdown.show {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .dropdown-item {
@@ -187,6 +324,23 @@ body::before {
   transition: all 0.2s ease;
   border-radius: 12px;
   margin: 0 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropdown-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.dropdown-item:hover::before {
+  left: 100%;
 }
 
 .dropdown-item:hover {
@@ -197,6 +351,7 @@ body::before {
 .dropdown-item i {
   width: 16px;
   color: var(--text-secondary);
+  transition: var(--transition);
 }
 
 /* Container e Game Card */
@@ -216,6 +371,7 @@ body::before {
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   animation: fadeInUp 0.6s ease-out;
+  transition: var(--transition);
 }
 
 .game-card::before {
@@ -231,6 +387,7 @@ body::before {
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   opacity: 0.6;
+  transition: var(--transition);
 }
 
 .game-header {
@@ -425,6 +582,12 @@ svg path:hover {
   z-index: 100;
   animation: resultPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+}
+
+[data-theme="light"] .result-display {
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid rgba(255, 215, 0, 0.5);
 }
 
 .result-display.show {
@@ -479,6 +642,23 @@ svg path:hover {
   transition: all 0.3s ease;
   font-weight: 600;
   font-size: 0.9rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-bet-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.quick-bet-btn:hover::before {
+  left: 100%;
 }
 
 .quick-bet-btn:hover {
@@ -708,6 +888,7 @@ svg path:hover {
   margin-top: 24px;
   border: 2px solid rgba(192, 192, 192, 0.2);
   box-shadow: var(--shadow);
+  transition: var(--transition);
 }
 
 .history-header {
@@ -765,11 +946,20 @@ svg path:hover {
   transition: all 0.3s ease;
 }
 
+[data-theme="light"] .bet-item {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(192, 192, 192, 0.3);
+}
+
 .bet-item:hover {
   background: rgba(30, 30, 30, 0.8);
   transform: translateX(6px);
   border-color: rgba(192, 192, 192, 0.3);
   box-shadow: 0 4px 15px rgba(192, 192, 192, 0.2);
+}
+
+[data-theme="light"] .bet-item:hover {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .bet-info {
@@ -843,6 +1033,11 @@ svg path:hover {
   transform: scale(0.9);
   transition: transform 0.3s ease;
   overflow: hidden;
+  transition: var(--transition);
+}
+
+[data-theme="light"] .modal-box {
+  border: 2px solid rgba(255, 215, 0, 0.5);
 }
 
 .modal.show .modal-box {
@@ -989,6 +1184,11 @@ svg path:hover {
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   max-width: 350px;
+  transition: var(--transition);
+}
+
+[data-theme="light"] .notification {
+  border: 2px solid rgba(192, 192, 192, 0.4);
 }
 
 .notification.show {
@@ -1126,6 +1326,11 @@ svg path:hover {
     font-size: 1.1rem;
     min-width: 160px;
   }
+  
+  /* Ajustes para tema claro em mobile */
+  [data-theme="light"] .game-card {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
 }
 
 @media (max-width: 480px) {
@@ -1229,6 +1434,12 @@ svg path:hover {
   border: 1px solid var(--card-border);
   border-radius: 12px;
   box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+[data-theme="light"] .probability-info {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 245, 245, 0.9) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .probability-info .hint {
@@ -1293,4 +1504,61 @@ svg path:hover {
 .probability-actions .btn:hover {
   opacity: 1;
   transform: scale(1.05);
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Foco visível para acessibilidade */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #FFD700;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --text: #FFFFFF;
+    --bg: #000000;
+    --card: #111111;
+  }
+  
+  [data-theme="light"] {
+    --text: #000000;
+    --bg: #FFFFFF;
+    --card: #F5F5F5;
+  }
+  
+  .btn-primary {
+    background: #FFD700;
+    color: #000000;
+  }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--input-bg);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #FFA000 0%, #FF8C00 100%);
 }
